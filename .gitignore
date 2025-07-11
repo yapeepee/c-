@@ -1,0 +1,22 @@
+# .NET
+  bin/
+  obj/
+  *.user
+  *.userosscache
+  *.suo
+  *.cache
+  *.dll
+  *.exe
+  *.pdb
+
+  # 資料庫檔案
+  *.db
+  *.db-shm
+  *.db-wal
+
+  # VS Code
+  .vscode/
+
+  # 系統檔案
+  .DS_Store
+  Thumbs.db
