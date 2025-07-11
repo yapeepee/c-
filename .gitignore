@@ -20,3 +20,6 @@
   # 系統檔案
   .DS_Store
   Thumbs.db
+
+  # Markdown 檔案
+  *.md
