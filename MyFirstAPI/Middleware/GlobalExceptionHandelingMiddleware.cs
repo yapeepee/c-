@@ -5,12 +5,12 @@ using MyFirstAPI.Models;
 
 namespace MyFirstAPI.Middleware
 {
-    public class GEHmiddlewware
+    public class GEHmiddleware
     {
         private readonly RequestDelegate _next;
-        private readonly ILogger<GEHmiddlewware> _logger;
+        private readonly ILogger<GEHmiddleware> _logger;
 
-        public GEHmiddlewware(RequestDelegate next, ILogger<GEHmiddlewware> logger)
+        public GEHmiddleware(RequestDelegate next, ILogger<GEHmiddleware> logger)
         {
             _next = next;
             _logger = logger;
@@ -42,7 +42,7 @@ namespace MyFirstAPI.Middleware
             {
                 case NotFoundException notFound:
                     context.Response.StatusCode = 404;
-                    errorResponseType = "Not Found";
+                    errorResponse.Type = "Not Found";
                     errorResponse.Title = "Resource not found";
                     errorResponse.Detail = notFound.Message;
                     errorResponse.Status = 404;
@@ -65,7 +65,13 @@ namespace MyFirstAPI.Middleware
                     break;
             }
 
-            var JsonResponse = 
+            var JsonResponse = JsonSerializer.Serialize(errorResponse, new JsonSerializerOptions
+            {
+                PropertyNamingPolicy = JsonNamingPolicy.
+                CamelCase
+            });
+
+            await context.Response.WriteAsync(JsonResponse);
         }
     }
 }

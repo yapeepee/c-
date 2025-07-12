@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using MyFirstAPI.Data;
 using MyFirstAPI.Services; 
 using MyFirstAPI.Repositories;
+using MyFirstAPI.Middleware;
 
 
 var builder = WebApplication.CreateBuilder(args);
