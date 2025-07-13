@@ -1,9 +1,10 @@
 using Microsoft.AspNetCore.Mvc;
-  using MyFirstAPI.Models;
-  using MyFirstAPI.Services;
-  using MyFirstAPI.DTOs.Product;
-  using AutoMapper;
-  using Microsoft.AspNetCore.Authorization;
+using MyFirstAPI.Models;
+using MyFirstAPI.Services;
+using MyFirstAPI.DTOs.Product;
+using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
   namespace MyFirstAPI.CONTROLLERS
 {
@@ -79,15 +80,15 @@ _productService.GetByIdAsync(id);
         }
 
 
+        [HttpGet("profile")]
         public IActionResult GetMyProfile()
         {
-            var userID =
-                userID.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            var username = userID.Identity?.Name;
-            var userRole = userID.FindFirst(ClaimTypes.Role)?.Value;
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var username = User.Identity?.Name;
+            var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
             return Ok(new
             {
-                UserID = userID,
+                UserID = userId,
                 Username = username,
                 Role = userRole
             });

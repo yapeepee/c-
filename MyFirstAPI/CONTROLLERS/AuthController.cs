@@ -19,8 +19,6 @@ namespace MyFirstAPI.CONTROLLERS
         [HttpPost("login")]
         public IActionResult Login([FromBody] LoginDto loginDto)
         {
-            // TODO: 實際專案中應該從資料庫驗證使用者
-            // 這裡只是示範，使用寫死的帳密
             if (loginDto.Username == "admin" && loginDto.Password == "password123")
             {
                 var user = new User

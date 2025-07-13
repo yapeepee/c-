@@ -7,7 +7,9 @@ using MyFirstAPI.Middleware;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Versioning;
 using Microsoft.OpenApi.Models;
-
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,18 +18,43 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
   {
-      options.SwaggerDoc("v1", new OpenApiInfo  // 定義 v1 文件
+      options.SwaggerDoc("v1", new OpenApiInfo
       {
-          Title = "My First API - V1",  // API 標題
-          Version = "v1",  // 版本號
-          Description = "第一版 API"  // 描述
+          Title = "My First API - V1",
+          Version = "v1",
+          Description = "第一版 API"
       });
 
-      options.SwaggerDoc("v2", new OpenApiInfo  // 定義 v2 文件
+      options.SwaggerDoc("v2", new OpenApiInfo
       {
-          Title = "My First API - V2",  // API 標題
-          Version = "v2",  // 版本號
-          Description = "第二版 API，新增分頁功能"  // 描述
+          Title = "My First API - V2",
+          Version = "v2",
+          Description = "第二版 API，新增分頁功能"
+      });
+
+      options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+      {
+          Name = "Authorization",
+          Type = SecuritySchemeType.Http,
+          Scheme = "bearer",
+          BearerFormat = "JWT",
+          In = ParameterLocation.Header,
+          Description = "請在此處輸入 Bearer token，例如：Bearer {token}"
+      });
+
+      options.AddSecurityRequirement(new OpenApiSecurityRequirement
+      {
+          {
+              new OpenApiSecurityScheme
+              {
+                  Reference = new OpenApiReference
+                  {
+                      Type = ReferenceType.SecurityScheme,
+                      Id = "Bearer"
+                  }
+              },
+              new string[] {}
+          }
       });
   });
 
@@ -49,13 +76,31 @@ builder.Services.AddVersionedApiExplorer(options =>
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite("Data Source=MyFirstAPI.db"));
 
+builder.Services.AddScoped<IJwtService, JwtService>();
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
 builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddControllers();
 builder.Services.AddAutoMapper(typeof(Program));
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer
+(
+    options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = builder.Configuration["Jwt:Issuer"],
+            ValidAudience = builder.Configuration["Jwt:Audience"],
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
+        };
+    }
+);
 
 
 var app = builder.Build();
+
 app.UseMiddleware<GEHmiddleware>();
 
 // Configure the HTTP request pipeline.
@@ -70,6 +115,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseAuthentication();
+app.UseAuthorization();
 app.MapControllers();
 
 var summaries = new[]

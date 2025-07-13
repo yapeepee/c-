@@ -17,8 +17,7 @@ namespace MyFirstAPI.Mappings
 
             CreateMap<UpdateProductDto, Product>()
                 .ForMember(dest => dest.Id, opt => opt.Ignore())
-                .ForMember(dest => dest.CreatedDate, opt => opt.Ignore())
-                
+                .ForMember(dest => dest.CreatedDate, opt => opt.Ignore());
         }
     }
 }
