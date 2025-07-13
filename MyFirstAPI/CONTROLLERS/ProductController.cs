@@ -1,111 +1,75 @@
 using Microsoft.AspNetCore.Mvc;
-using MyFirstAPI.Models;
-using MyFirstAPI.Services;
+  using MyFirstAPI.Models;
+  using MyFirstAPI.Services;
+  using MyFirstAPI.DTOs.Product;
+  using AutoMapper;
 
-namespace MyFirstAPI.CONTROLLERS
-{
-    [ApiController]
-    [Route("api/[controller]")]
-    public class ProductController : ControllerBase
-    {
-        private readonly IProductService _productService;
-        public ProductController(IProductService productService)
-        {
-            _productService = productService;
-        }
+  namespace MyFirstAPI.CONTROLLERS
+  {
+      [ApiController]
+      [Route("api/[controller]")]
+      public class ProductController : ControllerBase
+      {
+          private readonly IProductService _productService;
+          private readonly IMapper _mapper;
 
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<Product>>> GetAll()
-        {
-            var products = await _productService.GetAllAsync();
-            return Ok(products);
-        }
+          public ProductController(IProductService 
+  productService, IMapper mapper)
+          {
+              _productService = productService;
+              _mapper = mapper;
+          }
 
-        [HttpGet("{id}")]
-        public async Task<ActionResult<Product>> GetById(int id)
-        {
-            try
-            {
-                var product = await _productService.GetByIdAsync(id);
-                if (product == null)
-                {
-                    return NotFound($"Product with ID {id} not found.");
-                }
-                return Ok(product);
-            }
-            catch (KeyNotFoundException)
-            {
-                return NotFound($"Product with ID {id} not found.");
-            }
-        }
+          [HttpGet]
+          public async
+  Task<ActionResult<IEnumerable<ProductDto>>> GetAll()
+          {
+              var products = await _productService.GetAllAsync();
+              var productDtos =_mapper.Map<IEnumerable<ProductDto>>(products);
+              return Ok(productDtos);
+          }
 
-        [HttpPost]
-        public async Task<ActionResult<Product>> Create([FromBody] Product product)
-        {
-            try
-            {
-                var createdProduct = await _productService.CreateAsync(product);
-                return CreatedAtAction(nameof(GetById), new { id = createdProduct.Id }, createdProduct);
-            }
-            catch (ArgumentNullException ex)
-            {
-                return BadRequest(ex.Message);
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(ex.Message);
-            }
-            
-        }
+          [HttpGet("{id}")]
+          public async Task<ActionResult<ProductDto>> GetById(int
+   id)
+          {
+              var product = await
+  _productService.GetByIdAsync(id);
+              var productDto = _mapper.Map<ProductDto>(product);
+              return Ok(productDto);
+          }
 
-        [HttpPut("{id}")]
-        public async Task<ActionResult<Product>> Update(int id, [FromBody] Product product)
-        {
-            try
-            {
-                var updatedProduct = await _productService.UpdateProductAsync(id, product);
-                return Ok(updatedProduct);
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(ex.Message);
-            }
-            catch (ArgumentNullException ex)
-            {
-                return BadRequest(ex.Message);
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(ex.Message);
-            }
-            
-        }
+          [HttpPost]
+          public async Task<ActionResult<ProductDto>>
+  Create([FromBody] CreateProductDto createDto)
+          {
+              var product = _mapper.Map<Product>(createDto);
+              var createdProduct = await
+  _productService.CreateAsync(product);
+              var productDto =
+  _mapper.Map<ProductDto>(createdProduct);
+              return CreatedAtAction(nameof(GetById), new { id =
+  productDto.Id }, productDto);
+          }
 
+          [HttpPut("{id}")]
+          public async Task<ActionResult<ProductDto>> Update(int
+  id, [FromBody] UpdateProductDto updateDto)
+          {
+              var product = _mapper.Map<Product>(updateDto);
+              product.Id = id;
+              var updatedProduct = await
+  _productService.UpdateProductAsync(id, product);
+              var productDto =
+  _mapper.Map<ProductDto>(updatedProduct);
+              return Ok(productDto);
+          }
 
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(int id)
-        {
-            try
-            {
-                var result = await _productService.DeleteProductAsync(id);
-                if (!result)
-                {
-                    return NotFound($"Product with ID {id} not found.");
-                }
-                return NoContent();
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(ex.Message);
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(ex.Message);
-            }
-            
-        }
-        
-
-
-    }
-}
+          [HttpDelete("{id}")]
+          public async Task<IActionResult> Delete(int id)
+          {
+              await _productService.DeleteProductAsync(id);
+              return NoContent();
+          }
+      }
+  }
