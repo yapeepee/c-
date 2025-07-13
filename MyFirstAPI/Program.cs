@@ -4,6 +4,9 @@ using MyFirstAPI.Data;
 using MyFirstAPI.Services; 
 using MyFirstAPI.Repositories;
 using MyFirstAPI.Middleware;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Versioning;
+using Microsoft.OpenApi.Models;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -11,7 +14,37 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+  {
+      options.SwaggerDoc("v1", new OpenApiInfo  // 定義 v1 文件
+      {
+          Title = "My First API - V1",  // API 標題
+          Version = "v1",  // 版本號
+          Description = "第一版 API"  // 描述
+      });
+
+      options.SwaggerDoc("v2", new OpenApiInfo  // 定義 v2 文件
+      {
+          Title = "My First API - V2",  // API 標題
+          Version = "v2",  // 版本號
+          Description = "第二版 API，新增分頁功能"  // 描述
+      });
+  });
+
+builder.Services.AddApiVersioning(options => 
+  {
+      options.DefaultApiVersion = new ApiVersion(1, 0);  
+      options.AssumeDefaultVersionWhenUnspecified = true; 
+      options.ReportApiVersions = true; 
+      options.ApiVersionReader = new UrlSegmentApiVersionReader(); 
+  });
+
+builder.Services.AddVersionedApiExplorer(options =>
+{
+    options.GroupNameFormat = "'v'VVV";  
+    options.SubstituteApiVersionInUrl = true;
+});
+
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite("Data Source=MyFirstAPI.db"));
@@ -29,7 +62,11 @@ app.UseMiddleware<GEHmiddleware>();
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerUI(options =>  // 設定 Swagger UI
+      {
+          options.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");  // V1 端點
+          options.SwaggerEndpoint("/swagger/v2/swagger.json", "My API V2");  // V2 端點
+      });
 }
 
 app.UseHttpsRedirection();
